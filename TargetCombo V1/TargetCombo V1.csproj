@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <PublishAot>true</PublishAot>  <!-- AOT Compilation remains enabled -->
+        <TrimMode>partial</TrimMode>
+        <IsTrimmable>false</IsTrimmable>
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+        <SelfContained>true</SelfContained>
+        <InvariantGlobalization>true</InvariantGlobalization>
+        <EnableNativeAOTLogging>true</EnableNativeAOTLogging>
+        <ApplicationIcon>logo.ico</ApplicationIcon>
+        <!-- Preserve dynamic code and ensure no trimming of needed dynamic members -->
+        <TrimmerRootAssembly>MyApp</TrimmerRootAssembly> <!-- Specify the root assembly if needed -->
+    </PropertyGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.7.0" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.7.0" />
+        <PackageReference Include="System.Management" Version="9.0.2" />
+    </ItemGroup>
+
+    <!-- Add reflection and dynamic member preservation through attributes -->
+   
+
+</Project>
