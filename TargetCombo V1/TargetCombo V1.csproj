@@ -18,17 +18,17 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" />
+        <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms"/>
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.7.0" />
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.7.0" />
-        <PackageReference Include="System.Management" Version="9.0.2" />
+        <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.7.0"/>
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.7.0"/>
+        <PackageReference Include="System.Management" Version="9.0.2"/>
     </ItemGroup>
 
     <!-- Add reflection and dynamic member preservation through attributes -->
-   
+
 
 </Project>
