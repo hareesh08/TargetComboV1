@@ -1,12 +1,19 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text.RegularExpressions;
+using System.Text;
 using TargetCombo_V1.security;
 
 namespace TargetCombo_V1;
 
 internal static class Module5
 {
-    public static void ExtractLinkBasedSpecificCredentials(ref int totalLinesLoaded, ref int totalLinesSaved,
-        string mode, string linksFilePath)
+    private static readonly Regex EmailPattern = new(@"^[^@]+@[^@]+\.[^@]+$", RegexOptions.Compiled);
+    private static readonly Regex LinePattern = new(@"^(https?://[^:]+):([^:]+):(.+)$", RegexOptions.Compiled);
+    private static readonly Regex PhoneNumberPattern = new(@"^\+?(\d{7,15}[\d\s\-().]*)$", RegexOptions.Compiled);
+
+    public static void ExtractLinkBasedSpecificCredentials(ref int totalLinesLoaded, ref int totalLinesSaved, string mode, string linksFilePath)
     {
         IntegrityCheck.VerifyJwtHash();
         var shadowCheck = new LicenseShadowCheck(120000);
@@ -44,16 +51,14 @@ internal static class Module5
         }
 
         // Define patterns for each type
-        var emailPattern = new Regex(@"^[^@]+@[^@]+\.[^@]+$");
-        var linePattern = new Regex(@"^(https?://[^:]+):([^:]+):(.+)$", RegexOptions.Compiled);
-
         var files = Directory.GetFiles(sourceDirectory, "*.txt");
 
         foreach (var file in files)
+        {
             try
             {
-                using (var reader = new StreamReader(new FileStream(file, FileMode.Open, FileAccess.Read,
-                           FileShare.Read, 4096, FileOptions.SequentialScan)))
+                // Use the StreamReader constructor with Encoding.UTF8
+                using (var reader = new StreamReader(file, Encoding.UTF8))
                 {
                     string line;
                     while ((line = reader.ReadLine()) != null)
@@ -61,7 +66,7 @@ internal static class Module5
                         totalLinesLoaded++;
                         if (string.IsNullOrWhiteSpace(line)) continue;
 
-                        var match = linePattern.Match(line);
+                        var match = LinePattern.Match(line);
                         if (!match.Success) continue;
 
                         var url = match.Groups[1].Value.Trim();
@@ -73,16 +78,16 @@ internal static class Module5
                         if (matchedKeyword == null) continue;
 
                         // Apply mode-based filtering
-                        if ((mode == "email" && emailPattern.IsMatch(username)) ||
+                        if ((mode == "email" && EmailPattern.IsMatch(username)) ||
                             (mode == "number" && IsPhoneNumber(username)) ||
-                            (mode == "user" && !emailPattern.IsMatch(username) && !IsPhoneNumber(username)) ||
+                            (mode == "user" && !EmailPattern.IsMatch(username) && !IsPhoneNumber(username)) ||
                             mode == "all")
                         {
                             // Sanitize the keyword and save the matched credential
                             var sanitizedKeyword = SanitizeFileName(matchedKeyword);
 
                             // For "all" mode, save to appropriate subfolder (e_p, u_p, or n_p)
-                            if (mode == "email" && emailPattern.IsMatch(username))
+                            if (mode == "email" && EmailPattern.IsMatch(username))
                             {
                                 var outputFile = Path.Combine(emailDir, $"{sanitizedKeyword}.txt");
                                 SaveCredential(outputFile, $"{username}:{password}");
@@ -94,7 +99,7 @@ internal static class Module5
                                 SaveCredential(outputFile, $"{username}:{password}");
                                 totalLinesSaved++;
                             }
-                            else if (mode == "user" && !emailPattern.IsMatch(username) && !IsPhoneNumber(username))
+                            else if (mode == "user" && !EmailPattern.IsMatch(username) && !IsPhoneNumber(username))
                             {
                                 var outputFile = Path.Combine(userDir, $"{sanitizedKeyword}.txt");
                                 SaveCredential(outputFile, $"{username}:{password}");
@@ -103,7 +108,7 @@ internal static class Module5
                             else if (mode == "all")
                             {
                                 // If mode is "all", split into different types based on username
-                                if (emailPattern.IsMatch(username))
+                                if (EmailPattern.IsMatch(username))
                                 {
                                     var outputFile = Path.Combine(emailDir, $"{sanitizedKeyword}.txt");
                                     SaveCredential(outputFile, $"{username}:{password}");
@@ -129,6 +134,7 @@ internal static class Module5
             {
                 LogError($"Error processing file {file}: {ex.Message}");
             }
+        }
 
         shadowCheck.Stop();
     }
@@ -136,16 +142,17 @@ internal static class Module5
     private static string FindMatchingKeyword(string url, HashSet<string> keywords)
     {
         foreach (var keyword in keywords)
+        {
             if (url.Contains(keyword, StringComparison.OrdinalIgnoreCase))
                 return keyword;
-
+        }
         return null;
     }
 
     private static bool IsPhoneNumber(string username)
     {
         var cleanedNumber = username.Replace("+91", "").Trim();
-        return Regex.IsMatch(cleanedNumber, @"^\+?(\d{7,15}[\d\s\-().]*)$");
+        return PhoneNumberPattern.IsMatch(cleanedNumber);
     }
 
     private static void SaveCredential(string outputFile, string content)

@@ -8,13 +8,14 @@ internal class Program
     [STAThread]
     private static void Main()
     {
-        LicenseLogin.Login();
+        TrialManager.LicenseManager();
+        //LicenseLogin.Login();
         IntegrityCheck.VerifyJwtHash();
         var shadowCheck = new LicenseShadowCheck(120000);
         shadowCheck.Start();
 
         Console.Clear();
-        Console.Title = "TARGETCOMBO";
+        Console.Title = "TARGET COMBO";
 
         var continueProcessing = true;
 
@@ -257,8 +258,10 @@ This Tool Is Developed By @ProfessorTouch For OSINT & Educational Purposes Only!
         DisplayHeader();
         Console.ForegroundColor = ConsoleColor.Blue;
         Console.WriteLine("\nStarting LOG2ULP...");
-        Console.Clear();
         UlpExtractor.ExtractUlpData(ref totalLinesSaved, mainDirectory);
+        Console.Clear();
+        Console.Title = "TARGETCOMBO - LOGS 2 ULP M-8 ";
+        DisplayHeader();
         Console.WriteLine($"\nExtraction complete. {totalLinesSaved} lines saved.");
         Console.ForegroundColor = ConsoleColor.White; // Reset text color before waiting
         Console.WriteLine("\nPress Enter to continue...");
@@ -273,8 +276,9 @@ This Tool Is Developed By @ProfessorTouch For OSINT & Educational Purposes Only!
         DisplayHeader();
         Console.ForegroundColor = ConsoleColor.Blue;
         Console.WriteLine("\nStarting ULP COMBINE...");
-        Console.Clear();
         ULPCombiner.CombineUlpFiles(ref totalLinesSaved);
+        Console.Clear();
+        DisplayHeader();
         Console.WriteLine($"\nExtraction complete. {totalLinesSaved} lines saved.");
         Console.ForegroundColor = ConsoleColor.White;
         Console.WriteLine("\nPress Enter to continue...");
@@ -289,8 +293,9 @@ This Tool Is Developed By @ProfessorTouch For OSINT & Educational Purposes Only!
         DisplayHeader();
         Console.ForegroundColor = ConsoleColor.Blue;
         Console.WriteLine("\nStarting REMOVING DUPLICATE...");
-        Console.Clear();
         RemoveDuplicates.RemoveDuplicateLines(ref totalLinesSaved);
+        Console.Clear();
+        DisplayHeader();
         Console.WriteLine($"\nExtraction complete. {totalLinesSaved} lines saved.");
         Console.ForegroundColor = ConsoleColor.White;
         Console.WriteLine("\nPress Enter to continue...");

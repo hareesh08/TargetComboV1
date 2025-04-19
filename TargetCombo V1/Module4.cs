@@ -1,23 +1,30 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using System.Text.RegularExpressions;
 using TargetCombo_V1.security;
 
 namespace TargetCombo_V1;
 
 internal static class Module4
 {
-    public static void ExtractLinkBasedSpecificCredentials(ref int totalLinesLoaded, ref int totalLinesSaved,
-        string mode, string linksFilePath)
+    private static readonly Regex EmailPattern = new(@"^[^@]+@[^@]+\.[^@]+$", RegexOptions.Compiled);
+    private static readonly Regex LinePattern = new(@"^(https?://[^:]+):([^:]+):(.+)$", RegexOptions.Compiled);
+    private static readonly Regex PhoneNumberPattern = new(@"^\+?(\d{7,15}[\d\s\-().]*)$", RegexOptions.Compiled);
+
+    public static void ExtractLinkBasedSpecificCredentials(ref int totalLinesLoaded, ref int totalLinesSaved, string mode, string linksFilePath)
     {
         IntegrityCheck.VerifyJwtHash();
         var shadowCheck = new LicenseShadowCheck(120000);
         shadowCheck.Start();
 
         // Load the keywords from the links file
-        var linksFileName = Path.GetFileNameWithoutExtension(linksFilePath);
+        string linksFileName = Path.GetFileNameWithoutExtension(linksFilePath);
         var keywords = new HashSet<string>(File.ReadAllLines(linksFilePath), StringComparer.OrdinalIgnoreCase);
 
-        var exeDirectory = AppDomain.CurrentDomain.BaseDirectory;
-        var sourceDirectory = Path.Combine(exeDirectory, "source");
+        string exeDirectory = AppDomain.CurrentDomain.BaseDirectory;
+        string sourceDirectory = Path.Combine(exeDirectory, "source");
         if (!Directory.Exists(sourceDirectory))
         {
             Console.ForegroundColor = ConsoleColor.Red;
@@ -27,38 +34,32 @@ internal static class Module4
         }
 
         // Set up output directories based on mode
-        var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-        var outputDirectory = Path.Combine(exeDirectory, $"{linksFileName}_Full_{mode}_{timestamp}");
-        Directory.CreateDirectory(outputDirectory);
+        string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+        string outputDirectory = Path.Combine(exeDirectory, $"FUll_{linksFileName}_{timestamp}");
 
-        // Create subdirectories for email, user, and number passwords when mode is "all"
-        var emailDir = Path.Combine(outputDirectory, "Email-password");
-        var userDir = Path.Combine(outputDirectory, "User-password");
-        var numberDir = Path.Combine(outputDirectory, "Number-password");
+        // Segregated directories for email, user, and number passwords
+        var emailDirectory = Path.Combine(outputDirectory, "email-password");
+        var userDirectory = Path.Combine(outputDirectory, "user-password");
+        var numberDirectory = Path.Combine(outputDirectory, "number-password");
 
-        if (mode == "all")
-        {
-            Directory.CreateDirectory(emailDir);
-            Directory.CreateDirectory(userDir);
-            Directory.CreateDirectory(numberDir);
-        }
+        // Ensure all directories are created
+        Directory.CreateDirectory(emailDirectory);
+        Directory.CreateDirectory(userDirectory);
+        Directory.CreateDirectory(numberDirectory);
 
-        // Define output file names for each type
-        var outputFileEmail = Path.Combine(emailDir, "email-password.txt");
-        var outputFileUser = Path.Combine(userDir, "user-password.txt");
-        var outputFileNumber = Path.Combine(numberDir, "number-password.txt");
+        // Define output file names based on extraction type
+        string emailFile = Path.Combine(emailDirectory, $"{mode}-email--password.txt");
+        string userFile = Path.Combine(userDirectory, $"{mode}-user--password.txt");
+        string numberFile = Path.Combine(numberDirectory, $"{mode}-number--password.txt");
 
-        // Define patterns for each type
-        var emailPattern = new Regex(@"^[^@]+@[^@]+\.[^@]+$");
-        var linePattern = new Regex(@"^(https?://[^:]+):([^:]+):(.+)$", RegexOptions.Compiled);
-
-        var files = Directory.GetFiles(sourceDirectory, "*.txt");
+        string[] files = Directory.GetFiles(sourceDirectory, "*.txt");
 
         foreach (var file in files)
+        {
             try
             {
-                using (var reader = new StreamReader(new FileStream(file, FileMode.Open, FileAccess.Read,
-                           FileShare.Read, 4096, FileOptions.SequentialScan)))
+                // Use the correct StreamReader constructor
+                using (var reader = new StreamReader(file, Encoding.UTF8)) // Default encoding
                 {
                     string line;
                     while ((line = reader.ReadLine()) != null)
@@ -66,52 +67,41 @@ internal static class Module4
                         totalLinesLoaded++;
                         if (string.IsNullOrWhiteSpace(line)) continue;
 
-                        var match = linePattern.Match(line);
+                        var match = LinePattern.Match(line);
                         if (!match.Success) continue;
 
-                        var url = match.Groups[1].Value.Trim();
-                        var username = match.Groups[2].Value.Trim();
-                        var password = match.Groups[3].Value.Trim();
+                        string url = match.Groups[1].Value.Trim();
+                        string username = match.Groups[2].Value.Trim();
+                        string password = match.Groups[3].Value.Trim();
 
                         // Check if URL contains any of the keywords from the links file
-                        var matchedKeyword = FindMatchingKeyword(url, keywords);
+                        string matchedKeyword = FindMatchingKeyword(url, keywords);
                         if (matchedKeyword == null) continue;
 
                         // Apply mode-based filtering
-                        if ((mode == "email" && emailPattern.IsMatch(username)) ||
+                        if ((mode == "email" && EmailPattern.IsMatch(username)) ||
                             (mode == "number" && IsPhoneNumber(username)) ||
-                            (mode == "user" && !emailPattern.IsMatch(username) && !IsPhoneNumber(username)) ||
-                            mode == "all")
+                            (mode == "user" && !EmailPattern.IsMatch(username) && !IsPhoneNumber(username)) ||
+                            (mode == "all"))
                         {
-                            // Sanitize keyword and save the matched credential based on the mode
-                            var sanitizedKeyword = SanitizeFileName(matchedKeyword);
+                            // Sanitize keyword and save the matched credential
+                            string sanitizedKeyword = SanitizeFileName(matchedKeyword);
 
-                            if (mode == "email" && emailPattern.IsMatch(username))
+                            // Segregate and save the credential based on the username type
+                            if (EmailPattern.IsMatch(username))
                             {
-                                SaveCredential(outputFileEmail, $"{username}:{password}");
-                                totalLinesSaved++;
+                                SaveCredential(emailFile, $"{username}:{password}");
                             }
-                            else if (mode == "number" && IsPhoneNumber(username))
+                            else if (IsPhoneNumber(username))
                             {
-                                SaveCredential(outputFileNumber, $"{username}:{password}");
-                                totalLinesSaved++;
+                                SaveCredential(numberFile, $"{username}:{password}");
                             }
-                            else if (mode == "user" && !emailPattern.IsMatch(username) && !IsPhoneNumber(username))
+                            else
                             {
-                                SaveCredential(outputFileUser, $"{username}:{password}");
-                                totalLinesSaved++;
+                                SaveCredential(userFile, $"{username}:{password}");
                             }
-                            else if (mode == "all")
-                            {
-                                if (emailPattern.IsMatch(username))
-                                    SaveCredential(outputFileEmail, $"{username}:{password}");
-                                else if (IsPhoneNumber(username))
-                                    SaveCredential(outputFileNumber, $"{username}:{password}");
-                                else
-                                    SaveCredential(outputFileUser, $"{username}:{password}");
 
-                                totalLinesSaved++;
-                            }
+                            totalLinesSaved++;
                         }
                     }
                 }
@@ -120,24 +110,25 @@ internal static class Module4
             {
                 LogError($"Error processing file {file}: {ex.Message}");
             }
+        }
 
         shadowCheck.Stop();
     }
 
-
     private static string FindMatchingKeyword(string url, HashSet<string> keywords)
     {
         foreach (var keyword in keywords)
+        {
             if (url.Contains(keyword, StringComparison.OrdinalIgnoreCase))
                 return keyword;
-
+        }
         return null;
     }
 
     private static bool IsPhoneNumber(string username)
     {
         var cleanedNumber = username.Replace("+91", "").Trim();
-        return Regex.IsMatch(cleanedNumber, @"^\+?(\d{7,15}[\d\s\-().]*)$");
+        return PhoneNumberPattern.IsMatch(cleanedNumber);
     }
 
     private static void SaveCredential(string outputFile, string content)
@@ -160,6 +151,7 @@ internal static class Module4
 
     private static string SanitizeFileName(string fileName)
     {
-        return Regex.Replace(fileName, @"[<>:""/\\|?*]", "_");
+        // Replace invalid characters with underscores
+        return Regex.Replace(fileName, @"[<>:""/\\|?*\x00-\x1F]", "_");
     }
 }
