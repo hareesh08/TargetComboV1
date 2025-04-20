@@ -13,6 +13,7 @@ internal static class Module3
 
         var exeDirectory = AppDomain.CurrentDomain.BaseDirectory;
         var sourceDirectory = Path.Combine(exeDirectory, "source");
+
         if (!Directory.Exists(sourceDirectory))
         {
             Console.ForegroundColor = ConsoleColor.Red;
@@ -21,27 +22,29 @@ internal static class Module3
             return;
         }
 
-        // Set up output directories based on mode
+        // Create timestamped output directory
         var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
         var outputDirectory = Path.Combine(exeDirectory, $"Full_{mode}_{timestamp}");
         Directory.CreateDirectory(outputDirectory);
 
-        // Define output file names based on extraction type
-        var outputFile = Path.Combine(outputDirectory, $"{mode}-password.txt");
+        // Output files
+        var emailOutputFile = Path.Combine(outputDirectory, "Email-password.txt");
+        var numberOutputFile = Path.Combine(outputDirectory, "Number-password.txt");
+        var userOutputFile = Path.Combine(outputDirectory, "User-password.txt");
 
-        // Define patterns for each type
-        var emailPattern = new Regex(@"^[^@]+@[^@]+\.[^@]+$");
+        // Unified output for single-mode (non-all)
+        var singleModeOutputFile = Path.Combine(outputDirectory, $"{mode}-password.txt");
 
-        // Using same pattern as Module2 to ensure consistency
+        var emailPattern = new Regex(@"^[^@]+@[^@]+\.[^@]+$", RegexOptions.Compiled);
         var linePattern = new Regex(@"^(https?://[^:]+):([^:]+):(.+)$", RegexOptions.Compiled);
 
         var files = Directory.GetFiles(sourceDirectory, "*.txt");
 
         foreach (var file in files)
+        {
             try
             {
-                using (var reader = new StreamReader(new FileStream(file, FileMode.Open, FileAccess.Read,
-                           FileShare.Read, 4096, FileOptions.SequentialScan)))
+                using (var reader = new StreamReader(file))
                 {
                     string line;
                     while ((line = reader.ReadLine()) != null)
@@ -54,14 +57,38 @@ internal static class Module3
 
                         var username = match.Groups[2].Value.Trim();
                         var password = match.Groups[3].Value.Trim();
+                        var credential = $"{username}:{password}";
 
-                        // Apply mode-based filtering, skip filtering for "all"
-                        if ((mode == "email" && emailPattern.IsMatch(username)) ||
-                            (mode == "number" && IsPhoneNumber(username)) ||
-                            (mode == "user" && !emailPattern.IsMatch(username) && !IsPhoneNumber(username)) ||
-                            mode == "all")
+                        if (mode == "email" && emailPattern.IsMatch(username))
                         {
-                            SaveCredential(outputFile, $"{username}:{password}");
+                            SaveCredential(singleModeOutputFile, credential);
+                            totalLinesSaved++;
+                        }
+                        else if (mode == "number" && IsPhoneNumber(username))
+                        {
+                            SaveCredential(singleModeOutputFile, credential);
+                            totalLinesSaved++;
+                        }
+                        else if (mode == "user" && !emailPattern.IsMatch(username) && !IsPhoneNumber(username))
+                        {
+                            SaveCredential(singleModeOutputFile, credential);
+                            totalLinesSaved++;
+                        }
+                        else if (mode == "all")
+                        {
+                            if (emailPattern.IsMatch(username))
+                            {
+                                SaveCredential(emailOutputFile, credential);
+                            }
+                            else if (IsPhoneNumber(username))
+                            {
+                                SaveCredential(numberOutputFile, credential);
+                            }
+                            else
+                            {
+                                SaveCredential(userOutputFile, credential);
+                            }
+
                             totalLinesSaved++;
                         }
                     }
@@ -71,6 +98,7 @@ internal static class Module3
             {
                 LogError($"Error processing file {file}: {ex.Message}");
             }
+        }
 
         shadowCheck.Stop();
     }

@@ -13,13 +13,14 @@ internal static class Module5
     private static readonly Regex LinePattern = new(@"^(https?://[^:]+):([^:]+):(.+)$", RegexOptions.Compiled);
     private static readonly Regex PhoneNumberPattern = new(@"^\+?(\d{7,15}[\d\s\-().]*)$", RegexOptions.Compiled);
 
-    public static void ExtractLinkBasedSpecificCredentials(ref int totalLinesLoaded, ref int totalLinesSaved, string mode, string linksFilePath)
+    public static void ExtractLinkBasedSpecificCredentials(ref int totalLinesLoaded, ref int totalLinesSaved,
+        string mode, string linksFilePath)
     {
         IntegrityCheck.VerifyJwtHash();
         var shadowCheck = new LicenseShadowCheck(120000);
         shadowCheck.Start();
 
-        // Load the keywords from the links file
+        // Load keywords from links file
         var linksFileName = Path.GetFileNameWithoutExtension(linksFilePath);
         var keywords = new HashSet<string>(File.ReadAllLines(linksFilePath), StringComparer.OrdinalIgnoreCase);
 
@@ -33,31 +34,27 @@ internal static class Module5
             return;
         }
 
-        // Set up output directories based on mode
+        // Set up output directory
         var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
         var outputDirectory = Path.Combine(exeDirectory, $"{linksFileName}_Invidual_{mode}_{timestamp}");
         Directory.CreateDirectory(outputDirectory);
 
-        // Create subdirectories for email, user, and number passwords when mode is "all"
+        // Create subdirectories based on mode
         var emailDir = Path.Combine(outputDirectory, "Email-password");
         var userDir = Path.Combine(outputDirectory, "User-password");
         var numberDir = Path.Combine(outputDirectory, "Number-password");
 
-        if (mode == "all")
-        {
-            Directory.CreateDirectory(emailDir);
-            Directory.CreateDirectory(userDir);
-            Directory.CreateDirectory(numberDir);
-        }
+        if (mode == "all" || mode == "email") Directory.CreateDirectory(emailDir);
+        if (mode == "all" || mode == "user") Directory.CreateDirectory(userDir);
+        if (mode == "all" || mode == "number") Directory.CreateDirectory(numberDir);
 
-        // Define patterns for each type
+        // Process all source files
         var files = Directory.GetFiles(sourceDirectory, "*.txt");
 
         foreach (var file in files)
         {
             try
             {
-                // Use the StreamReader constructor with Encoding.UTF8
                 using (var reader = new StreamReader(file, Encoding.UTF8))
                 {
                     string line;
@@ -73,59 +70,50 @@ internal static class Module5
                         var username = match.Groups[2].Value.Trim();
                         var password = match.Groups[3].Value.Trim();
 
-                        // Check if URL contains any of the keywords from the links file
+                        // Match URL with any keyword
                         var matchedKeyword = FindMatchingKeyword(url, keywords);
                         if (matchedKeyword == null) continue;
 
-                        // Apply mode-based filtering
-                        if ((mode == "email" && EmailPattern.IsMatch(username)) ||
-                            (mode == "number" && IsPhoneNumber(username)) ||
-                            (mode == "user" && !EmailPattern.IsMatch(username) && !IsPhoneNumber(username)) ||
-                            mode == "all")
-                        {
-                            // Sanitize the keyword and save the matched credential
-                            var sanitizedKeyword = SanitizeFileName(matchedKeyword);
+                        var sanitizedKeyword = SanitizeFileName(matchedKeyword);
 
-                            // For "all" mode, save to appropriate subfolder (e_p, u_p, or n_p)
-                            if (mode == "email" && EmailPattern.IsMatch(username))
+                        // Match by mode
+                        if ((mode == "email" && EmailPattern.IsMatch(username)))
+                        {
+                            var outputFile = Path.Combine(emailDir, $"{sanitizedKeyword}.txt");
+                            SaveCredential(outputFile, $"{username}:{password}");
+                            totalLinesSaved++;
+                        }
+                        else if ((mode == "number" && IsPhoneNumber(username)))
+                        {
+                            var outputFile = Path.Combine(numberDir, $"{sanitizedKeyword}.txt");
+                            SaveCredential(outputFile, $"{username}:{password}");
+                            totalLinesSaved++;
+                        }
+                        else if ((mode == "user" && !EmailPattern.IsMatch(username) && !IsPhoneNumber(username)))
+                        {
+                            var outputFile = Path.Combine(userDir, $"{sanitizedKeyword}.txt");
+                            SaveCredential(outputFile, $"{username}:{password}");
+                            totalLinesSaved++;
+                        }
+                        else if (mode == "all")
+                        {
+                            if (EmailPattern.IsMatch(username))
                             {
                                 var outputFile = Path.Combine(emailDir, $"{sanitizedKeyword}.txt");
                                 SaveCredential(outputFile, $"{username}:{password}");
-                                totalLinesSaved++;
                             }
-                            else if (mode == "number" && IsPhoneNumber(username))
+                            else if (IsPhoneNumber(username))
                             {
                                 var outputFile = Path.Combine(numberDir, $"{sanitizedKeyword}.txt");
                                 SaveCredential(outputFile, $"{username}:{password}");
-                                totalLinesSaved++;
                             }
-                            else if (mode == "user" && !EmailPattern.IsMatch(username) && !IsPhoneNumber(username))
+                            else
                             {
                                 var outputFile = Path.Combine(userDir, $"{sanitizedKeyword}.txt");
                                 SaveCredential(outputFile, $"{username}:{password}");
-                                totalLinesSaved++;
                             }
-                            else if (mode == "all")
-                            {
-                                // If mode is "all", split into different types based on username
-                                if (EmailPattern.IsMatch(username))
-                                {
-                                    var outputFile = Path.Combine(emailDir, $"{sanitizedKeyword}.txt");
-                                    SaveCredential(outputFile, $"{username}:{password}");
-                                }
-                                else if (IsPhoneNumber(username))
-                                {
-                                    var outputFile = Path.Combine(numberDir, $"{sanitizedKeyword}.txt");
-                                    SaveCredential(outputFile, $"{username}:{password}");
-                                }
-                                else
-                                {
-                                    var outputFile = Path.Combine(userDir, $"{sanitizedKeyword}.txt");
-                                    SaveCredential(outputFile, $"{username}:{password}");
-                                }
 
-                                totalLinesSaved++;
-                            }
+                            totalLinesSaved++;
                         }
                     }
                 }
@@ -139,6 +127,7 @@ internal static class Module5
         shadowCheck.Stop();
     }
 
+
     private static string FindMatchingKeyword(string url, HashSet<string> keywords)
     {
         foreach (var keyword in keywords)
@@ -146,6 +135,7 @@ internal static class Module5
             if (url.Contains(keyword, StringComparison.OrdinalIgnoreCase))
                 return keyword;
         }
+
         return null;
     }
 

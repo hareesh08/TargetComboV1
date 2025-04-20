@@ -13,7 +13,8 @@ internal static class Module4
     private static readonly Regex LinePattern = new(@"^(https?://[^:]+):([^:]+):(.+)$", RegexOptions.Compiled);
     private static readonly Regex PhoneNumberPattern = new(@"^\+?(\d{7,15}[\d\s\-().]*)$", RegexOptions.Compiled);
 
-    public static void ExtractLinkBasedSpecificCredentials(ref int totalLinesLoaded, ref int totalLinesSaved, string mode, string linksFilePath)
+    public static void ExtractLinkBasedSpecificCredentials(ref int totalLinesLoaded, ref int totalLinesSaved,
+        string mode, string linksFilePath)
     {
         IntegrityCheck.VerifyJwtHash();
         var shadowCheck = new LicenseShadowCheck(120000);
@@ -25,6 +26,7 @@ internal static class Module4
 
         string exeDirectory = AppDomain.CurrentDomain.BaseDirectory;
         string sourceDirectory = Path.Combine(exeDirectory, "source");
+
         if (!Directory.Exists(sourceDirectory))
         {
             Console.ForegroundColor = ConsoleColor.Red;
@@ -33,24 +35,33 @@ internal static class Module4
             return;
         }
 
-        // Set up output directories based on mode
+        // Set up output directory
         string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-        string outputDirectory = Path.Combine(exeDirectory, $"FUll_{linksFileName}_{timestamp}");
+        string outputDirectory = Path.Combine(exeDirectory, $"Full_{linksFileName}_{timestamp}");
 
-        // Segregated directories for email, user, and number passwords
-        var emailDirectory = Path.Combine(outputDirectory, "email-password");
-        var userDirectory = Path.Combine(outputDirectory, "user-password");
-        var numberDirectory = Path.Combine(outputDirectory, "number-password");
+        // Define folders and output file paths based on mode
+        string? emailFile = null, userFile = null, numberFile = null;
 
-        // Ensure all directories are created
-        Directory.CreateDirectory(emailDirectory);
-        Directory.CreateDirectory(userDirectory);
-        Directory.CreateDirectory(numberDirectory);
+        if (mode == "email" || mode == "all")
+        {
+            string emailDirectory = Path.Combine(outputDirectory, "email-password");
+            Directory.CreateDirectory(emailDirectory);
+            emailFile = Path.Combine(emailDirectory, $"{mode}-email--password.txt");
+        }
 
-        // Define output file names based on extraction type
-        string emailFile = Path.Combine(emailDirectory, $"{mode}-email--password.txt");
-        string userFile = Path.Combine(userDirectory, $"{mode}-user--password.txt");
-        string numberFile = Path.Combine(numberDirectory, $"{mode}-number--password.txt");
+        if (mode == "user" || mode == "all")
+        {
+            string userDirectory = Path.Combine(outputDirectory, "user-password");
+            Directory.CreateDirectory(userDirectory);
+            userFile = Path.Combine(userDirectory, $"{mode}-user--password.txt");
+        }
+
+        if (mode == "number" || mode == "all")
+        {
+            string numberDirectory = Path.Combine(outputDirectory, "number-password");
+            Directory.CreateDirectory(numberDirectory);
+            numberFile = Path.Combine(numberDirectory, $"{mode}-number--password.txt");
+        }
 
         string[] files = Directory.GetFiles(sourceDirectory, "*.txt");
 
@@ -58,8 +69,7 @@ internal static class Module4
         {
             try
             {
-                // Use the correct StreamReader constructor
-                using (var reader = new StreamReader(file, Encoding.UTF8)) // Default encoding
+                using (var reader = new StreamReader(file, Encoding.UTF8))
                 {
                     string line;
                     while ((line = reader.ReadLine()) != null)
@@ -74,31 +84,27 @@ internal static class Module4
                         string username = match.Groups[2].Value.Trim();
                         string password = match.Groups[3].Value.Trim();
 
-                        // Check if URL contains any of the keywords from the links file
                         string matchedKeyword = FindMatchingKeyword(url, keywords);
                         if (matchedKeyword == null) continue;
 
-                        // Apply mode-based filtering
                         if ((mode == "email" && EmailPattern.IsMatch(username)) ||
                             (mode == "number" && IsPhoneNumber(username)) ||
                             (mode == "user" && !EmailPattern.IsMatch(username) && !IsPhoneNumber(username)) ||
                             (mode == "all"))
                         {
-                            // Sanitize keyword and save the matched credential
-                            string sanitizedKeyword = SanitizeFileName(matchedKeyword);
+                            string credential = $"{username}:{password}";
 
-                            // Segregate and save the credential based on the username type
-                            if (EmailPattern.IsMatch(username))
+                            if (EmailPattern.IsMatch(username) && emailFile != null)
                             {
-                                SaveCredential(emailFile, $"{username}:{password}");
+                                SaveCredential(emailFile, credential);
                             }
-                            else if (IsPhoneNumber(username))
+                            else if (IsPhoneNumber(username) && numberFile != null)
                             {
-                                SaveCredential(numberFile, $"{username}:{password}");
+                                SaveCredential(numberFile, credential);
                             }
-                            else
+                            else if (userFile != null)
                             {
-                                SaveCredential(userFile, $"{username}:{password}");
+                                SaveCredential(userFile, credential);
                             }
 
                             totalLinesSaved++;
@@ -115,6 +121,7 @@ internal static class Module4
         shadowCheck.Stop();
     }
 
+
     private static string FindMatchingKeyword(string url, HashSet<string> keywords)
     {
         foreach (var keyword in keywords)
@@ -122,6 +129,7 @@ internal static class Module4
             if (url.Contains(keyword, StringComparison.OrdinalIgnoreCase))
                 return keyword;
         }
+
         return null;
     }
 
