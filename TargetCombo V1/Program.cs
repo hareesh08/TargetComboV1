@@ -62,7 +62,7 @@ internal class Program
                     ULPRemoveDuplicates();
                     break;
                 case "11":
-                    SmtpExtract();
+                    ExtractCredentials1();
                     break;
                 case "Q":
                     shadowCheck.Stop();
@@ -306,20 +306,17 @@ This Tool Is Developed By @ProfessorTouch For OSINT & Educational Purposes Only!
         Console.ReadLine();
     }
 
-    private static void SmtpExtract()
+    private static void ExtractCredentials1()
     {
         var totalLinesSaved = 0;
         var totalLinesLoaded = 0;
         Console.Clear();
-        Console.Title = "TARGETCOMBO - ULP REMOVE DUPLICATE M-10 ";
+        Console.Title = "TARGETCOMBO - ULP Credential Extract M-11 ";
         DisplayHeader();
         Console.ForegroundColor = ConsoleColor.Blue;
-        Console.WriteLine("\nStarting REMOVING DUPLICATE...");
-        SmtpExtractor.ExtractSmtpCredentials(ref totalLinesLoaded, ref totalLinesSaved);
+        Module11.DisplayMenu();
         Console.Clear();
         DisplayHeader();
-        DisplaySummary(totalLinesLoaded, totalLinesSaved);
-        Console.WriteLine($"\nExtraction complete. {totalLinesSaved} lines saved.");
         Console.ForegroundColor = ConsoleColor.White;
         Console.WriteLine("\nPress Enter to continue...");
         Console.ReadLine();
