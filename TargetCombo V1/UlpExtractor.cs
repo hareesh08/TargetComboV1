@@ -1,5 +1,6 @@
-﻿namespace TargetCombo_V1;
-using TargetCombo_V1.security;
+﻿using TargetCombo_V1.security;
+
+namespace TargetCombo_V1;
 
 internal static class UlpExtractor
 {
@@ -8,7 +9,7 @@ internal static class UlpExtractor
         IntegrityCheck.VerifyJwtHash();
         var shadowCheck = new LicenseShadowCheck(120000);
         shadowCheck.Start();
-        
+
         var exeDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
         // Create the "Extracted Ulp" folder if it doesn't exist

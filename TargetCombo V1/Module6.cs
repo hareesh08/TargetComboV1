@@ -41,7 +41,7 @@ internal static class Module6
         if (!Directory.Exists(sourceDirectory)) return;
 
         var wordToAdd = "https://";
-        string[] files = Directory.GetFiles(sourceDirectory, "*.txt");
+        var files = Directory.GetFiles(sourceDirectory, "*.txt");
 
         // Process each file
         foreach (var file in files)
@@ -67,7 +67,7 @@ internal static class Module6
         try
         {
             // Read all lines from the input file
-            string[] lines = File.ReadAllLines(inputFile, Encoding.UTF8);
+            var lines = File.ReadAllLines(inputFile, Encoding.UTF8);
 
             // Modify each line by adding the specified word
             for (var i = 0; i < lines.Length; i++)

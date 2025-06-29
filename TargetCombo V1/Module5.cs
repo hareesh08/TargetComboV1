@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Text;
 using System.Text.RegularExpressions;
-using System.Text;
 using TargetCombo_V1.security;
 
 namespace TargetCombo_V1;
@@ -52,7 +49,6 @@ internal static class Module5
         var files = Directory.GetFiles(sourceDirectory, "*.txt");
 
         foreach (var file in files)
-        {
             try
             {
                 using (var reader = new StreamReader(file, Encoding.UTF8))
@@ -77,19 +73,19 @@ internal static class Module5
                         var sanitizedKeyword = SanitizeFileName(matchedKeyword);
 
                         // Match by mode
-                        if ((mode == "email" && EmailPattern.IsMatch(username)))
+                        if (mode == "email" && EmailPattern.IsMatch(username))
                         {
                             var outputFile = Path.Combine(emailDir, $"{sanitizedKeyword}.txt");
                             SaveCredential(outputFile, $"{username}:{password}");
                             totalLinesSaved++;
                         }
-                        else if ((mode == "number" && IsPhoneNumber(username)))
+                        else if (mode == "number" && IsPhoneNumber(username))
                         {
                             var outputFile = Path.Combine(numberDir, $"{sanitizedKeyword}.txt");
                             SaveCredential(outputFile, $"{username}:{password}");
                             totalLinesSaved++;
                         }
-                        else if ((mode == "user" && !EmailPattern.IsMatch(username) && !IsPhoneNumber(username)))
+                        else if (mode == "user" && !EmailPattern.IsMatch(username) && !IsPhoneNumber(username))
                         {
                             var outputFile = Path.Combine(userDir, $"{sanitizedKeyword}.txt");
                             SaveCredential(outputFile, $"{username}:{password}");
@@ -122,7 +118,6 @@ internal static class Module5
             {
                 LogError($"Error processing file {file}: {ex.Message}");
             }
-        }
 
         shadowCheck.Stop();
     }
@@ -131,10 +126,8 @@ internal static class Module5
     private static string FindMatchingKeyword(string url, HashSet<string> keywords)
     {
         foreach (var keyword in keywords)
-        {
             if (url.Contains(keyword, StringComparison.OrdinalIgnoreCase))
                 return keyword;
-        }
 
         return null;
     }

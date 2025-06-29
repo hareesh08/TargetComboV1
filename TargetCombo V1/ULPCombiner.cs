@@ -1,5 +1,6 @@
-﻿namespace TargetCombo_V1;
-using TargetCombo_V1.security;
+﻿using TargetCombo_V1.security;
+
+namespace TargetCombo_V1;
 
 internal static class ULPCombiner
 {
@@ -28,7 +29,7 @@ internal static class ULPCombiner
         var combinedFilePath = Path.Combine(sourceDirectory, $"combined_{totalLinesSaved}_{timestamp}.txt");
 
         // Get all ULP files from the source directory (assuming .txt files are ULP files)
-        string[] ulpFiles = Directory.GetFiles(sourceDirectory, "*.txt");
+        var ulpFiles = Directory.GetFiles(sourceDirectory, "*.txt");
 
         using (var writer = new StreamWriter(combinedFilePath, false))
         {

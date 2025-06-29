@@ -1,5 +1,6 @@
-﻿namespace TargetCombo_V1;
-using TargetCombo_V1.security;
+﻿using TargetCombo_V1.security;
+
+namespace TargetCombo_V1;
 
 internal static class RemoveDuplicates
 {
@@ -28,14 +29,14 @@ internal static class RemoveDuplicates
         var outputFilePath = Path.Combine(sourceDirectory, $"RemovedDup{totalLinesSaved}_{timestamp}.txt");
 
         // Create a HashSet to store unique lines (set automatically removes duplicates)
-        HashSet<string> uniqueLines = new HashSet<string>();
+        var uniqueLines = new HashSet<string>();
 
         // Initialize counts
         var totalInputLines = 0;
         var totalDuplicateLines = 0;
 
         // Get all ULP files from the source directory (assuming .txt files are ULP files)
-        string[] ulpFiles = Directory.GetFiles(sourceDirectory, "*.txt");
+        var ulpFiles = Directory.GetFiles(sourceDirectory, "*.txt");
 
         // Iterate over each file to read and remove duplicates
         foreach (var file in ulpFiles)

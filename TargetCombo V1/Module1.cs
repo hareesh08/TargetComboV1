@@ -3,7 +3,6 @@ using TargetCombo_V1.security;
 
 namespace TargetCombo_V1;
 
-
 internal static class Module1
 {
     public static void ProcessFiles(string linksFilePath, ref int totalLinesLoaded, ref int totalLinesSaved)

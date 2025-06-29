@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
+﻿using System.Text;
 using System.Text.RegularExpressions;
 using TargetCombo_V1.security;
 
@@ -21,11 +18,11 @@ internal static class Module4
         shadowCheck.Start();
 
         // Load the keywords from the links file
-        string linksFileName = Path.GetFileNameWithoutExtension(linksFilePath);
+        var linksFileName = Path.GetFileNameWithoutExtension(linksFilePath);
         var keywords = new HashSet<string>(File.ReadAllLines(linksFilePath), StringComparer.OrdinalIgnoreCase);
 
-        string exeDirectory = AppDomain.CurrentDomain.BaseDirectory;
-        string sourceDirectory = Path.Combine(exeDirectory, "source");
+        var exeDirectory = AppDomain.CurrentDomain.BaseDirectory;
+        var sourceDirectory = Path.Combine(exeDirectory, "source");
 
         if (!Directory.Exists(sourceDirectory))
         {
@@ -36,37 +33,36 @@ internal static class Module4
         }
 
         // Set up output directory
-        string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-        string outputDirectory = Path.Combine(exeDirectory, $"Full_{linksFileName}_{timestamp}");
+        var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+        var outputDirectory = Path.Combine(exeDirectory, $"Full_{linksFileName}_{timestamp}");
 
         // Define folders and output file paths based on mode
         string? emailFile = null, userFile = null, numberFile = null;
 
         if (mode == "email" || mode == "all")
         {
-            string emailDirectory = Path.Combine(outputDirectory, "email-password");
+            var emailDirectory = Path.Combine(outputDirectory, "email-password");
             Directory.CreateDirectory(emailDirectory);
             emailFile = Path.Combine(emailDirectory, $"{mode}-email--password.txt");
         }
 
         if (mode == "user" || mode == "all")
         {
-            string userDirectory = Path.Combine(outputDirectory, "user-password");
+            var userDirectory = Path.Combine(outputDirectory, "user-password");
             Directory.CreateDirectory(userDirectory);
             userFile = Path.Combine(userDirectory, $"{mode}-user--password.txt");
         }
 
         if (mode == "number" || mode == "all")
         {
-            string numberDirectory = Path.Combine(outputDirectory, "number-password");
+            var numberDirectory = Path.Combine(outputDirectory, "number-password");
             Directory.CreateDirectory(numberDirectory);
             numberFile = Path.Combine(numberDirectory, $"{mode}-number--password.txt");
         }
 
-        string[] files = Directory.GetFiles(sourceDirectory, "*.txt");
+        var files = Directory.GetFiles(sourceDirectory, "*.txt");
 
         foreach (var file in files)
-        {
             try
             {
                 using (var reader = new StreamReader(file, Encoding.UTF8))
@@ -80,32 +76,25 @@ internal static class Module4
                         var match = LinePattern.Match(line);
                         if (!match.Success) continue;
 
-                        string url = match.Groups[1].Value.Trim();
-                        string username = match.Groups[2].Value.Trim();
-                        string password = match.Groups[3].Value.Trim();
+                        var url = match.Groups[1].Value.Trim();
+                        var username = match.Groups[2].Value.Trim();
+                        var password = match.Groups[3].Value.Trim();
 
-                        string matchedKeyword = FindMatchingKeyword(url, keywords);
+                        var matchedKeyword = FindMatchingKeyword(url, keywords);
                         if (matchedKeyword == null) continue;
 
                         if ((mode == "email" && EmailPattern.IsMatch(username)) ||
                             (mode == "number" && IsPhoneNumber(username)) ||
                             (mode == "user" && !EmailPattern.IsMatch(username) && !IsPhoneNumber(username)) ||
-                            (mode == "all"))
+                            mode == "all")
                         {
-                            string credential = $"{username}:{password}";
+                            var credential = $"{username}:{password}";
 
                             if (EmailPattern.IsMatch(username) && emailFile != null)
-                            {
                                 SaveCredential(emailFile, credential);
-                            }
                             else if (IsPhoneNumber(username) && numberFile != null)
-                            {
                                 SaveCredential(numberFile, credential);
-                            }
-                            else if (userFile != null)
-                            {
-                                SaveCredential(userFile, credential);
-                            }
+                            else if (userFile != null) SaveCredential(userFile, credential);
 
                             totalLinesSaved++;
                         }
@@ -116,7 +105,6 @@ internal static class Module4
             {
                 LogError($"Error processing file {file}: {ex.Message}");
             }
-        }
 
         shadowCheck.Stop();
     }
@@ -125,10 +113,8 @@ internal static class Module4
     private static string FindMatchingKeyword(string url, HashSet<string> keywords)
     {
         foreach (var keyword in keywords)
-        {
             if (url.Contains(keyword, StringComparison.OrdinalIgnoreCase))
                 return keyword;
-        }
 
         return null;
     }

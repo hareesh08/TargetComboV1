@@ -61,6 +61,9 @@ internal class Program
                 case "10":
                     ULPRemoveDuplicates();
                     break;
+                case "11":
+                    SmtpExtract();
+                    break;
                 case "Q":
                     shadowCheck.Stop();
                     continueProcessing = false;
@@ -114,6 +117,7 @@ This Tool Is Developed By @ProfessorTouch For OSINT & Educational Purposes Only!
         Console.WriteLine("8.Logs 2 ULP");
         Console.WriteLine("9.ULP COMBINE");
         Console.WriteLine("10.ULP DUPLICATE REMOVE");
+        Console.WriteLine("11.SMTP,CPANEL,WEBMAIL EXTRACT");
         Console.WriteLine("Q.Exit Program");
 
         Console.ResetColor();
@@ -296,6 +300,25 @@ This Tool Is Developed By @ProfessorTouch For OSINT & Educational Purposes Only!
         RemoveDuplicates.RemoveDuplicateLines(ref totalLinesSaved);
         Console.Clear();
         DisplayHeader();
+        Console.WriteLine($"\nExtraction complete. {totalLinesSaved} lines saved.");
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.WriteLine("\nPress Enter to continue...");
+        Console.ReadLine();
+    }
+
+    private static void SmtpExtract()
+    {
+        var totalLinesSaved = 0;
+        var totalLinesLoaded = 0;
+        Console.Clear();
+        Console.Title = "TARGETCOMBO - ULP REMOVE DUPLICATE M-10 ";
+        DisplayHeader();
+        Console.ForegroundColor = ConsoleColor.Blue;
+        Console.WriteLine("\nStarting REMOVING DUPLICATE...");
+        SmtpExtractor.ExtractSmtpCredentials(ref totalLinesLoaded, ref totalLinesSaved);
+        Console.Clear();
+        DisplayHeader();
+        DisplaySummary(totalLinesLoaded, totalLinesSaved);
         Console.WriteLine($"\nExtraction complete. {totalLinesSaved} lines saved.");
         Console.ForegroundColor = ConsoleColor.White;
         Console.WriteLine("\nPress Enter to continue...");

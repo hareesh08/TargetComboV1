@@ -1,37 +1,35 @@
-﻿using System;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
 
-namespace TargetCombo_V1.security
+namespace TargetCombo_V1.security;
+
+public class JwtIntegrityCheck
 {
-    public class JwtIntegrityCheck
+    private static readonly string SecretKey = "TARGETULPOBAV2-LICENSE-KEY-TARGETULPOBAV2";
+
+    public static bool ValidateJwtSignature(string token)
     {
-        private static readonly string SecretKey = "TARGETULPOBAV2-LICENSE-KEY-TARGETULPOBAV2";
-
-        public static bool ValidateJwtSignature(string token)
+        try
         {
-            try
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(SecretKey);
+
+            var validationParameters = new TokenValidationParameters
             {
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var key = Encoding.UTF8.GetBytes(SecretKey);
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateLifetime = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key)
+            };
 
-                var validationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
-                    ValidateLifetime = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(key)
-                };
+            tokenHandler.ValidateToken(token, validationParameters, out _);
 
-                tokenHandler.ValidateToken(token, validationParameters, out _);
-
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            return true;
+        }
+        catch
+        {
+            return false;
         }
     }
 }

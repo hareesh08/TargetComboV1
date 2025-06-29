@@ -41,7 +41,6 @@ internal static class Module3
         var files = Directory.GetFiles(sourceDirectory, "*.txt");
 
         foreach (var file in files)
-        {
             try
             {
                 using (var reader = new StreamReader(file))
@@ -77,17 +76,11 @@ internal static class Module3
                         else if (mode == "all")
                         {
                             if (emailPattern.IsMatch(username))
-                            {
                                 SaveCredential(emailOutputFile, credential);
-                            }
                             else if (IsPhoneNumber(username))
-                            {
                                 SaveCredential(numberOutputFile, credential);
-                            }
                             else
-                            {
                                 SaveCredential(userOutputFile, credential);
-                            }
 
                             totalLinesSaved++;
                         }
@@ -98,7 +91,6 @@ internal static class Module3
             {
                 LogError($"Error processing file {file}: {ex.Message}");
             }
-        }
 
         shadowCheck.Stop();
     }

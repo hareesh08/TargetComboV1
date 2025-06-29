@@ -67,7 +67,6 @@ public static class LicenseLogin
 
     private static bool ValidateLicenseKey(string licenseKey)
     {
-        
         try
         {
             var tokenParts = licenseKey.Split('.');
@@ -112,8 +111,8 @@ This Tool Is Developed By @ProfessorTouch For OSINT & Educational Purposes Only!
 
 
         var storedLicenseKey = GetLicenseFromRegistry();
-        
-        if (storedLicenseKey != null &&!JwtIntegrityCheck.ValidateJwtSignature(storedLicenseKey))
+
+        if (storedLicenseKey != null && !JwtIntegrityCheck.ValidateJwtSignature(storedLicenseKey))
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("Invalid License Key");
@@ -121,7 +120,7 @@ This Tool Is Developed By @ProfessorTouch For OSINT & Educational Purposes Only!
             RemoveLicenseFromRegistry();
             AskForNewLicenseKey();
         }
-        
+
         if (storedLicenseKey != null && ValidateLicenseKey(storedLicenseKey))
         {
             var payload = JsonConvert.DeserializeObject<LicensePayload>(
@@ -162,8 +161,8 @@ This Tool Is Developed By @ProfessorTouch For OSINT & Educational Purposes Only!
         Console.WriteLine($"HWID: {GetHwid()}");
         Console.Write("\nENTER LICENSE KEY: ");
         var licenseKey = Console.ReadLine()?.Trim();
-        
-        if (licenseKey != null &&!JwtIntegrityCheck.ValidateJwtSignature(licenseKey))
+
+        if (licenseKey != null && !JwtIntegrityCheck.ValidateJwtSignature(licenseKey))
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("Invalid License Key");
@@ -212,9 +211,7 @@ This Tool Is Developed By @ProfessorTouch For OSINT & Educational Purposes Only!
         {
             if (key != null)
             {
-                // Only delete if the value exists
                 if (key.GetValue(LicenseRegistryValue) != null) key.DeleteValue(LicenseRegistryValue);
-
                 if (key.GetValue(JwtHashRegistryValue) != null) key.DeleteValue(JwtHashRegistryValue);
             }
         }
