@@ -317,6 +317,7 @@ This Tool Is Developed By @ProfessorTouch For OSINT & Educational Purposes Only!
         Module11.DisplayMenu();
         Console.Clear();
         DisplayHeader();
+        Main();
         Console.ForegroundColor = ConsoleColor.White;
         Console.WriteLine("\nPress Enter to continue...");
         Console.ReadLine();
