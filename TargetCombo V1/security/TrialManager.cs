@@ -15,8 +15,8 @@ public class TrialManager
 {
     private const string RegistryKeyPath = @"SOFTWARE\TargetULPCommercial";
     private const string JwtHashRegistryValue = "JwtKeyHash";
-    private const string IntegrityRegistryValue = "IntegrityHash";
-    private const string LastTrialRegistryValue = "LastTrialDate";
+    public const string IntegrityRegistryValue = "IntegrityHash";
+    public const string LastTrialRegistryValue = "LastTrialDate";
     private const string LicenseRegistryValue = "LicenseKey";
     private static Timer _licenseTimer;
 

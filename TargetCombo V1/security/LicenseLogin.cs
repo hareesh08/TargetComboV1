@@ -213,6 +213,8 @@ This Tool Is Developed By @ProfessorTouch For OSINT & Educational Purposes Only!
             {
                 if (key.GetValue(LicenseRegistryValue) != null) key.DeleteValue(LicenseRegistryValue);
                 if (key.GetValue(JwtHashRegistryValue) != null) key.DeleteValue(JwtHashRegistryValue);
+                if (key.GetValue(JwtHashRegistryValue) != null) key.DeleteValue(TrialManager.IntegrityRegistryValue);
+                if (key.GetValue(JwtHashRegistryValue) != null) key.DeleteValue(TrialManager.LastTrialRegistryValue);
             }
         }
     }

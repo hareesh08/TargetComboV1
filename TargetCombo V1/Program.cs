@@ -16,13 +16,14 @@ internal class Program
 
         Console.Clear();
         Console.Title = "TARGET COMBO";
-
+        
         var continueProcessing = true;
 
         while (continueProcessing)
         {
             DisplayHeader();
             DisplayMenu();
+            Utils.CreateSourceFolderIfNot();
             Console.ForegroundColor = ConsoleColor.Magenta;
             IntegrityCheck.VerifyJwtHash();
             Console.Write("Enter your choice: ");
@@ -63,6 +64,9 @@ internal class Program
                     break;
                 case "11":
                     ExtractCredentials1();
+                    break;
+                case "12":
+                    ULPSTDFORMAT();
                     break;
                 case "Q":
                     shadowCheck.Stop();
@@ -118,6 +122,7 @@ This Tool Is Developed By @ProfessorTouch For OSINT & Educational Purposes Only!
         Console.WriteLine("9.ULP COMBINE");
         Console.WriteLine("10.ULP DUPLICATE REMOVE");
         Console.WriteLine("11.SMTP,CPANEL,WEBMAIL EXTRACT");
+        Console.WriteLine("12.ULP STANDARD FORMAT CONVERTER");
         Console.WriteLine("Q.Exit Program");
 
         Console.ResetColor();
@@ -315,6 +320,23 @@ This Tool Is Developed By @ProfessorTouch For OSINT & Educational Purposes Only!
         DisplayHeader();
         Console.ForegroundColor = ConsoleColor.Blue;
         Module11.DisplayMenu();
+        Console.Clear();
+        DisplayHeader();
+        Main();
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.WriteLine("\nPress Enter to continue...");
+        Console.ReadLine();
+    }
+    
+    private static void ULPSTDFORMAT()
+    {
+        var totalLinesSaved = 0;
+        var totalLinesLoaded = 0;
+        Console.Clear();
+        Console.Title = "TARGETCOMBO - ULP STANDARD FORMAT CONVERTER Extract M-12 ";
+        DisplayHeader();
+        ULPformatConvert.NormalizeToStandardFormat();
+        Console.ForegroundColor = ConsoleColor.Blue;
         Console.Clear();
         DisplayHeader();
         Main();
